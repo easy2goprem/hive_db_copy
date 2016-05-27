@@ -1,0 +1,61 @@
+>have took the Dump of DB : 
+edit the script gettable_list with DB name : old_db and run the script gettblstr.sh
+>took the copy of database's data from its parent Directory.
+hdfs dfs -get /tenant_nm/hive/tenant_grp/warehouse/emp_info_xbblwv5.db
+>moved the data from old_cluster to new_cluster using DISTCP(Please implement Kerberos Cross Realm if already available)
+
+>Edit the files inside op_tbl_list directory with new database and directory structure
+edit_sc.sh
+>Create the directory structure as in Dev (edit the db name)
+hdfs dfs -mkdir /tenant_nm/hive/tenant_grp/warehouse/emp_info_xbblwv1.db/
+>Recreate the DataBase in UAT (Specify the new location where data is moved)
+CREATE DATABASE IF NOT EXISTS emp_info
+location '/tenant_nm/hive/tenant_grp/warehouse/emp_info_xbblwv1.db/'; 
+>recrete the tables in UAT 
+./createtbl.sh
+
+gettable_list.hql
+-----------------
+use bwh_db;
+show tables;
+
+
+Get table name script  -- gettblstr.sh
+---------------------
+#!/bin/bash
+set -x
+rm -rf /users/home/dshmhtm/sample/test/op_tbl_list/*
+rm -f /users/home/dshmhtm/sample/test/table_name.txt
+db=bwh_db
+hive -f /users/home/dshmhtm/sample/test/gettable_list.hql > /users/home/dshmhtm/sample/test/table_name.txt
+if [ $? != 0 ];then
+echo "not able to fetch data"
+fi
+if [ ! -f /users/home/dshmhtm/sample/test/table_name.txt ];then
+echo "file not exixts"
+fi
+cat /users/home/dshmhtm/sample/test/table_name.txt | while read line
+do
+echo -e "show create table $db.$line" > temp.txt
+hive -f temp.txt >> /users/home/dshmhtm/sample/test/op_tbl_list/$line
+done
+
+
+
+edit_sc.sh
+----------
+#!/bin/bash
+     ls /grid1/amlhtp/op_tbl_list/ | while read file;
+     do
+	 sed -i 's/emp_info_xbblwv5/emp_info_xbblwv1/g' /users/home/xbblwv5/op_tbl_list/$file
+	 sed -i 's/myclustertesttpc/myclustertestcnj/g' /users/home/xbblwv5/op_tbl_list/$file
+     done
+	 
+	 
+createtbl.sh 
+------------
+#!/bin/bash
+     ls /users/home/xbblwv5/op_tbl_list/ | while read file;
+      do
+	hive -f /users/home/xbblwv5/op_tbl_list/$file
+     done	 
