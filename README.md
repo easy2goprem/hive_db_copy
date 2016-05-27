@@ -1,5 +1,5 @@
 # hive_db_copy
-To Copy Database between Clusters
+To Copy Hive Database between Clusters with metadata and data.
 
 
 
